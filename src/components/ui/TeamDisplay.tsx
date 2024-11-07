@@ -55,7 +55,7 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({
   const bind = useDrag(({ swipe: [swipeX] }) => {
     if (swipeX === -1) handleNext();
     if (swipeX === 1) handlePrev();
-  });
+  })[0];
 
   return (
     <div className="flex flex-col items-center" {...bind()}>
