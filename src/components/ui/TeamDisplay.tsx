@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { teams } from "@/lib/data";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,7 +18,6 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({
   teamType,
 }) => {
   const [teamIndex, setTeamIndex] = useState(initialTeamIndex);
-
   const [selectedSubTeam, setSelectedSubTeam] = useState(
     teams[teamIndex].teams[0]?.teamName || ""
   );
@@ -52,13 +51,22 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({
     setSelectedSubTeam(event.target.value);
   };
 
-  const bind = useDrag(({ swipe: [swipeX] }) => {
-    if (swipeX === -1) handleNext();
-    if (swipeX === 1) handlePrev();
-  })[0];
+  // Create a ref for the div
+  const divRef = useRef<HTMLDivElement>(null);
+
+  // Use useDrag and specify the target as the divRef
+  useDrag(
+    ({ swipe: [swipeX] }) => {
+      if (swipeX === -1) handleNext();
+      if (swipeX === 1) handlePrev();
+    },
+    {
+      target: divRef,
+    }
+  );
 
   return (
-    <div className="flex flex-col items-center" {...bind()}>
+    <div ref={divRef} className="flex flex-col items-center">
       <AnimatePresence mode="wait">
         <motion.div
           key={teamIndex}
@@ -74,7 +82,6 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({
       <div className="flex flex-col items-center mt-4">
         <div className="text-white text-lg mb-2">{teams[teamIndex].name}</div>
         <div className="flex items-center">
-          {/* Updated arrow buttons */}
           <div
             onClick={handlePrev}
             className="p-3 cursor-pointer hover:bg-gray-700 rounded-full"
