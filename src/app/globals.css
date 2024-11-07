@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.cool-dropdown {
+  background: linear-gradient(135deg, #333333, #555555);
+  color: white;
+  border: 2px solid #555555;
+  border-radius: 0.5rem;
+  outline: none;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  appearance: none;
+  position: relative;
+  z-index: 10;
+}
+
+.cool-dropdown:hover {
+  background: linear-gradient(135deg, #555555, #333333);
+  border-color: #333333;
+}
+
+.cool-dropdown option {
+  background: #333333;
+  color: white;
+}
+
+.custom-select-option {
+  background-color: #000;
+  color: #fff;
+}
+
+.cool-dropdown::after {
+  content: "▼";
+  font-size: 0.75rem;
+  color: white;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
