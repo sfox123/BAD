@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import { teams } from "@/lib/data"; // Import the teams array
+import { teams } from "@/lib/data";
 
 interface Match {
   active: boolean;
@@ -201,6 +201,7 @@ export default function PointsTable() {
           <table className="min-w-full text-black bg-white border border-gray-200">
             <thead>
               <tr>
+                <th className="py-2 px-4 border-b">Rank</th>
                 <th className="py-2 px-4 border-b">Team</th>
                 <th className="py-2 px-4 border-b">Played</th>
                 <th className="py-2 px-4 border-b">Won</th>
@@ -209,8 +210,9 @@ export default function PointsTable() {
               </tr>
             </thead>
             <tbody>
-              {sortedGroupATeams.map(([teamName, stats]) => (
+              {sortedGroupATeams.map(([teamName, stats], index) => (
                 <tr key={teamName}>
+                  <td className="py-2 px-4 border-b">{index + 1}</td>
                   <td className="py-2 px-4 border-b">{teamName}</td>
                   <td className="py-2 px-4 border-b text-center">
                     {stats.matchesPlayed}
@@ -235,6 +237,7 @@ export default function PointsTable() {
           <table className="min-w-full text-black bg-white border border-gray-200">
             <thead>
               <tr>
+                <th className="py-2 px-4 border-b">Rank</th>
                 <th className="py-2 px-4 border-b">Team</th>
                 <th className="py-2 px-4 border-b">Played</th>
                 <th className="py-2 px-4 border-b">Won</th>
@@ -243,8 +246,9 @@ export default function PointsTable() {
               </tr>
             </thead>
             <tbody>
-              {sortedGroupBTeams.map(([teamName, stats]) => (
+              {sortedGroupBTeams.map(([teamName, stats], index) => (
                 <tr key={teamName}>
+                  <td className="py-2 px-4 border-b">{index + 1}</td>
                   <td className="py-2 px-4 border-b">{teamName}</td>
                   <td className="py-2 px-4 border-b text-center">
                     {stats.matchesPlayed}
