@@ -151,6 +151,7 @@ export const teams: Team[] = [
           { FullName: "Sameera Hewage" },
           { FullName: "Ranjan Suriyabandara" },
           { FullName: "Noyalganth Rajkumar" },
+          { FullName: "Shane Ferdinands" },
         ],
         femalePlayers: [
           { FullName: "Yenuli Amaratunga" },
@@ -158,7 +159,6 @@ export const teams: Team[] = [
           { FullName: "Geethani Dissanayake" },
           { FullName: "Kumudini Ragel" },
           { FullName: "Nalin de Silva" },
-          { FullName: "Iresha Peiris" },
         ],
       },
     ],
@@ -238,13 +238,13 @@ export const teams: Team[] = [
         Group: "B",
         malePlayers: [
           { FullName: "Aruna Dishantha" },
-          { FullName: "Antontte Amritha Muttiah" },
           { FullName: "Buddhika Sampath Darshana" },
           { FullName: "Eswaran Kathiresan" },
           { FullName: "Gayan Karunarathna" },
         ],
         femalePlayers: [
           { FullName: "Roshani Elizabeth Perera" },
+          { FullName: "Antontte Amritha Muttiah" },
           { FullName: "Kiruthika Mahenthiran" },
           { FullName: "Lakshika De Silva" },
           { FullName: "Keerthi Sri Priyankara" },
@@ -336,15 +336,8 @@ export const buttonData = [
     after: `${ops.src}`,
   },
   {
-    name: "AUDIENCE",
+    name: "Dashboard",
     icon: IconEye,
-    before: "https://i.ibb.co/zSDZwnB/crowd.jpg",
-    after:
-      "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExOG5qYmRnYW5seGxuaWd6eWk0NDJ5cWNzNTNvZ2dwempocTlxeTE1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26FxCOdhlvEQXbeH6/giphy.gif",
-  },
-  {
-    name: "POINTS",
-    icon: IconSettings,
     before: `${points.src}`,
     after: `${points.src}`,
   },

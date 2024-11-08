@@ -1,68 +1,159 @@
+// components/ui/Operator.tsx
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion, useAnimation } from "framer-motion";
-import { Button } from "@/components/ui/moving-border";
-import { match } from "@/lib/data";
+import React, { useState } from "react";
+import TeamDisplay from "@/components/ui/TeamDisplay";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
 
-import { setMatchType } from "@/lib/feature/teamSlice";
-import { useDispatch } from "react-redux";
+const Operator: React.FC = () => {
+  const [teamA, setTeamA] = useState<string>("");
+  const [teamAGroup, setTeamAGroup] = useState<string>("");
+  const [teamASubTeam, setTeamASubTeam] = useState<string>("");
 
-const Page = () => {
-  const [isClicked, setIsClicked] = useState(false);
-  const controls = useAnimation();
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const handleClick = () => {
-    controls.start({
-      opacity: 0,
-      x: -200,
-      transition: { duration: 0.5 },
-    });
-    setIsClicked(true);
+  const [teamB, setTeamB] = useState<string>("");
+  const [teamBGroup, setTeamBGroup] = useState<string>("");
+  const [teamBSubTeam, setTeamBSubTeam] = useState<string>("");
+
+  const [courtNumber, setCourtNumber] = useState<string>("");
+
+  const handleTeamAChange = (
+    teamName: string,
+    group: string,
+    subTeamName: string
+  ) => {
+    setTeamA(teamName);
+    setTeamAGroup(group);
+    setTeamASubTeam(subTeamName);
   };
 
-  const handleButtonClick = (name: string) => {
-    router.push(`/${name}`);
-    dispatch(setMatchType(name));
+  const handleTeamBChange = (
+    teamName: string,
+    group: string,
+    subTeamName: string
+  ) => {
+    setTeamB(teamName);
+    setTeamBGroup(group);
+    setTeamBSubTeam(subTeamName);
+  };
+
+  const handleCourtNumberChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setCourtNumber(event.target.value);
+  };
+
+  const registerMatch = async () => {
+    if (
+      !teamA ||
+      !teamAGroup ||
+      !teamASubTeam ||
+      !teamB ||
+      !teamBGroup ||
+      !teamBSubTeam ||
+      !courtNumber
+    ) {
+      alert(
+        "Please select both teams, their sub-teams, and select the court number."
+      );
+      return;
+    }
+
+    // Define the match types
+    const matchTypes = [
+      "Men's Singles",
+      "Women's Singles",
+      "Men's Doubles",
+      "Women's Doubles",
+      "Mixed Doubles",
+    ];
+
+    try {
+      // Loop through each match type and save a document
+      for (const matchType of matchTypes) {
+        const newMatch = {
+          teamA,
+          teamAGroup,
+          teamASubTeam,
+          teamB,
+          teamBGroup,
+          teamBSubTeam,
+          courtNumber: Number(courtNumber),
+          matchType,
+          timestamp: new Date(),
+          active: false,
+          winner: null,
+          scores: [],
+        };
+
+        const docRef = await addDoc(collection(db, "matches"), newMatch);
+        console.log(`Match ${matchType} registered with ID: `, docRef.id);
+      }
+
+      alert("All matches registered successfully!");
+
+      // Reset the form
+      setTeamA("");
+      setTeamAGroup("");
+      setTeamASubTeam("");
+      setTeamB("");
+      setTeamBGroup("");
+      setTeamBSubTeam("");
+      setCourtNumber("");
+    } catch (error) {
+      console.error("Error registering matches:", error);
+      alert("Failed to register matches. Please try again.");
+    }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-      <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-        {!isClicked && (
-          <motion.div initial={{ x: 0, opacity: 1 }} animate={controls}>
-            <Button
-              borderRadius="1.75rem"
-              className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
-              onClick={handleClick}
-            >
-              Start the game
-            </Button>
-          </motion.div>
-        )}
-        {isClicked &&
-          match.map((m, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: 200, y: 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ delay: 0.5 + index * 0.2, duration: 0.5 }}
-              className="w-full md:w-auto"
-            >
-              <Button
-                borderRadius="1.75rem"
-                className="bg-white dark:bg-slate-900 text-black dark:text-white border-neutral-200 dark:border-slate-800"
-                onClick={() => handleButtonClick(m.name)}
-              >
-                {m.name}
-              </Button>
-            </motion.div>
-          ))}
+    <div className="flex flex-col items-center p-4">
+      <h2 className="text-2xl font-bold mb-4">Register New Match</h2>
+      <div className="flex space-x-8">
+        {/* Team A Selection */}
+        <TeamDisplay
+          initialTeamIndex={0}
+          teamType="A"
+          onTeamChange={handleTeamAChange}
+        />
+
+        {/* Team B Selection */}
+        <TeamDisplay
+          initialTeamIndex={1}
+          teamType="B"
+          onTeamChange={handleTeamBChange}
+        />
       </div>
+
+      {/* Court Number Selection */}
+      <div className="mt-6">
+        <label htmlFor="courtNumber" className="text-white mr-2">
+          Court Number:
+        </label>
+        <select
+          id="courtNumber"
+          value={courtNumber}
+          onChange={handleCourtNumberChange}
+          className="p-2 text-black rounded border"
+        >
+          <option value="">-- Select Court --</option>
+          {[1, 2, 3, 4, 5].map((court) => (
+            <option key={court} value={court}>
+              Court {court}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Register Button */}
+      <button
+        onClick={registerMatch}
+        className="mt-8 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Register Matches
+      </button>
     </div>
   );
 };
 
-export default Page;
+export default Operator;

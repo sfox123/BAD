@@ -1,26 +1,24 @@
 // src/components/UmpireCard.tsx
+"use client";
 import React from "react";
 import { BackgroundGradient } from "./background-gradient";
 import Image from "next/image";
 import { IconArrowsDiff } from "@tabler/icons-react";
 import { teams } from "@/lib/data";
 import Link from "next/link";
-import { useDispatch } from "react-redux";
-import { setActive } from "@/lib/feature/teamSlice";
-// Import Firebase functions
 import { doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig"; // Adjust the import path as needed
+import { db } from "@/lib/firebaseConfig";
 
 interface Match {
   id: string;
   teamA: string;
   teamB: string;
   matchType: string;
+  courtNumber: number;
+  active: boolean;
 }
 
 const UmpireCard = ({ match }: { match: Match }) => {
-  const dispatch = useDispatch();
-
   const handleStart = async () => {
     // Reference to the match document in Firestore
     const matchRef = doc(db, "matches", match.id);
@@ -31,7 +29,7 @@ const UmpireCard = ({ match }: { match: Match }) => {
       console.log("Match status updated to active in Firestore");
 
       // Optionally dispatch to Redux after successful update
-      dispatch(setActive(true));
+      // dispatch(setActive(true));
     } catch (error) {
       console.error("Error updating match status:", error);
     }

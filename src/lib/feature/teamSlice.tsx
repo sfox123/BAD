@@ -1,104 +1,120 @@
+// src/lib/feature/teamSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "@/lib/store";
 
-interface Player {
-  FullName: string;
+interface Score {
+  teamA: number;
+  teamB: number;
+}
+
+interface Points {
+  teamA: number;
+  teamB: number;
 }
 
 interface TeamState {
   teamA: string;
   teamA_Group: string;
+  teamASubTeam: string;
   teamB: string;
   teamB_Group: string;
-  matchType: string;
-  teamAPlayers: Player[];
-  teamBPlayers: Player[];
-  selectedUmpire: string;
-  active: boolean;
+  teamBSubTeam: string;
+  courtName: string;
+  activeMatches: { [matchId: string]: boolean };
+  score: Score;
+  winner: "teamA" | "teamB" | null;
+  points: Points;
 }
 
 const initialState: TeamState = {
   teamA: "",
   teamA_Group: "",
+  teamASubTeam: "",
   teamB: "",
   teamB_Group: "",
-  matchType: "",
-  teamAPlayers: [],
-  teamBPlayers: [],
-  selectedUmpire: "",
-  active: false,
+  teamBSubTeam: "",
+  courtName: "",
+  activeMatches: {},
+  score: { teamA: 0, teamB: 0 },
+  winner: null,
+  points: { teamA: 0, teamB: 0 },
 };
 
 const teamSlice = createSlice({
   name: "team",
   initialState,
   reducers: {
-    setTeamA: (
+    setTeamA(state, action: PayloadAction<string>) {
+      state.teamA = action.payload;
+    },
+    setTeamAGroup(state, action: PayloadAction<string>) {
+      state.teamA_Group = action.payload;
+    },
+    setTeamASubTeam(state, action: PayloadAction<string>) {
+      state.teamASubTeam = action.payload;
+    },
+    setTeamB(state, action: PayloadAction<string>) {
+      state.teamB = action.payload;
+    },
+    setTeamBGroup(state, action: PayloadAction<string>) {
+      state.teamB_Group = action.payload;
+    },
+    setTeamBSubTeam(state, action: PayloadAction<string>) {
+      state.teamBSubTeam = action.payload;
+    },
+    setCourtName(state, action: PayloadAction<string>) {
+      state.courtName = action.payload;
+    },
+    setMatchActive(
       state,
-      action: PayloadAction<{ team: string; group: string }>
-    ) => {
-      state.teamA = action.payload.team;
-      state.teamA_Group = action.payload.group;
+      action: PayloadAction<{ matchId: string; active: boolean }>
+    ) {
+      const { matchId, active } = action.payload;
+      state.activeMatches[matchId] = active;
     },
-    setTeamB: (
-      state,
-      action: PayloadAction<{ team: string; group: string }>
-    ) => {
-      state.teamB = action.payload.team;
-      state.teamB_Group = action.payload.group;
-    },
-    setMatchType: (state, action: PayloadAction<string>) => {
-      state.matchType = action.payload;
-    },
-    addPlayerToTeamA: (state, action: PayloadAction<Player>) => {
-      state.teamAPlayers.push(action.payload);
-    },
-    addPlayerToTeamB: (state, action: PayloadAction<Player>) => {
-      state.teamBPlayers.push(action.payload);
-    },
-    removePlayerFromTeamA: (state, action: PayloadAction<number>) => {
-      state.teamAPlayers.splice(action.payload, 1);
-    },
-    removePlayerFromTeamB: (state, action: PayloadAction<number>) => {
-      state.teamBPlayers.splice(action.payload, 1);
-    },
-    setSelectedUmpire: (state, action: PayloadAction<string>) => {
-      state.selectedUmpire = action.payload;
-    },
-    resetState: (state) => {
+    resetState(state) {
       Object.assign(state, initialState);
     },
-    setActive: (state, action: PayloadAction<boolean>) => {
-      state.active = action.payload;
+    updateScore(
+      state,
+      action: PayloadAction<{ team: "teamA" | "teamB"; delta: number }>
+    ) {
+      const { team, delta } = action.payload;
+      if (team === "teamA") {
+        state.score.teamA = Math.max(0, state.score.teamA + delta);
+      } else {
+        state.score.teamB = Math.max(0, state.score.teamB + delta);
+      }
+    },
+    setWinner(state, action: PayloadAction<"teamA" | "teamB">) {
+      const winner = action.payload;
+      const loser = winner === "teamA" ? "teamB" : "teamA";
+      state.winner = winner;
+      state.points[winner] = 2;
+      state.points[loser] = 1;
+    },
+    setForfeit(state, action: PayloadAction<"teamA" | "teamB">) {
+      const forfeit = action.payload;
+      const otherTeam = forfeit === "teamA" ? "teamB" : "teamA";
+      state.winner = null;
+      state.points[forfeit] = 0;
+      state.points[otherTeam] = 2;
     },
   },
 });
 
 export const {
   setTeamA,
+  setTeamAGroup,
+  setTeamASubTeam,
   setTeamB,
-  setMatchType,
-  addPlayerToTeamA,
-  addPlayerToTeamB,
-  removePlayerFromTeamA,
-  removePlayerFromTeamB,
-  setSelectedUmpire,
+  setTeamBGroup,
+  setTeamBSubTeam,
+  setCourtName,
+  setMatchActive,
   resetState,
-  setActive,
+  updateScore,
+  setWinner,
+  setForfeit,
 } = teamSlice.actions;
-
-export const isMatchFixButtonVisible = (state: RootState) => {
-  const teamState = state.team;
-  return (
-    teamState.teamA &&
-    teamState.teamA_Group &&
-    teamState.teamB &&
-    teamState.teamB_Group &&
-    teamState.matchType &&
-    teamState.teamAPlayers.length > 0 &&
-    teamState.teamBPlayers.length > 0 &&
-    teamState.selectedUmpire
-  );
-};
 
 export default teamSlice.reducer;

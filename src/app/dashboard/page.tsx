@@ -1,11 +1,9 @@
-// Page.tsx
 "use client";
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
-import React, { useEffect, useId, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { teams } from "@/lib/data";
-import { MatchLive } from "@/app/types";
 import PointsTable from "../points/page";
 
 // Mapping of Match Type abbreviations to full names
@@ -18,8 +16,34 @@ const matchTypeMap: { [key: string]: string } = {
 };
 
 export default function Page() {
+  interface Player {
+    FullName: string;
+  }
+
+  interface Score {
+    teamA: number;
+    teamB: number;
+  }
+
+  interface MatchLive {
+    id: string;
+    matchType: string;
+    teamA: string;
+    teamAPlayers: Player[];
+    teamA_Group: string;
+    teamASubTeam: string;
+    teamB: string;
+    teamBPlayers: Player[];
+    teamB_Group: string;
+    teamBSubTeam: string;
+    courtNumber: number;
+    winner: string | null;
+    active: boolean;
+    scores: Score;
+    timestamp: Date;
+  }
+
   const [matches, setMatches] = useState<MatchLive[]>([]);
-  const id = useId();
 
   const fetchData = async () => {
     try {
@@ -36,19 +60,13 @@ export default function Page() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 300000); // Fetch every 5 minutes
+    const interval = setInterval(fetchData, 15000); // Fetch every 5 minutes
     return () => clearInterval(interval);
   }, []);
 
   const getTeamLogo = (teamName: string) => {
     const team = teams.find((t) => t.name === teamName);
     return team ? team.logo : "";
-  };
-
-  // Function to extract court number from 'selectedUmpire' (e.g., "Court 2" => 2)
-  const getCourtNumber = (selectedUmpire: string): number | null => {
-    const match = selectedUmpire.match(/\d+/);
-    return match ? parseInt(match[0], 10) : null;
   };
 
   return (
@@ -69,19 +87,13 @@ export default function Page() {
           </thead>
           <tbody>
             {matches.map((match) => {
-              const courtNumber = getCourtNumber(match.selectedUmpire);
               // Get full match type name from the mapping
               const fullMatchType =
                 matchTypeMap[match.matchType] || match.matchType;
 
               return (
-                <tr
-                  key={`match-${match.teamA}-${match.teamB}-${id}`}
-                  className="text-center"
-                >
-                  <td className="py-2 px-4 border-b">
-                    {courtNumber !== null ? courtNumber : "N/A"}
-                  </td>
+                <tr key={match.id} className="text-center">
+                  <td className="py-2 px-4 border-b">{match.courtNumber}</td>
                   <td className="py-2 px-4 border-b">{fullMatchType}</td>
                   <td className="py-2 px-4 border-b flex items-center justify-center space-x-2">
                     <Image
@@ -91,14 +103,14 @@ export default function Page() {
                       height={40}
                       className="rounded-full"
                     />
-                    <span>{match.teamA}</span>
+                    <span>{match.teamASubTeam}</span>
                   </td>
                   <td className="py-2 px-4 border-b">
-                    {match.scores[match.currentRound]?.teamA ?? 0}
+                    {match.scores.teamA ?? 0}
                   </td>
                   <td className="py-2 px-4 border-b">VS</td>
                   <td className="py-2 px-4 border-b">
-                    {match.scores[match.currentRound]?.teamB ?? 0}
+                    {match.scores.teamB ?? 0}
                   </td>
                   <td className="py-2 px-4 border-b flex items-center justify-center space-x-2">
                     <Image
@@ -108,7 +120,7 @@ export default function Page() {
                       height={40}
                       className="rounded-full"
                     />
-                    <span>{match.teamB}</span>
+                    <span>{match.teamBSubTeam}</span>
                   </td>
                 </tr>
               );

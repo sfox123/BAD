@@ -5,8 +5,10 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import Loading from "@/components/ui/Loading";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
-
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/lib/store";
+import { updateScore, setWinner, setForfeit } from "@/lib/feature/teamSlice";
 
 export default function Page() {
   interface Match {
@@ -28,12 +30,13 @@ export default function Page() {
     teamA: number;
     teamB: number;
   }
+
   const [match, setMatch] = useState<Match | null>(null);
-  const [teamA, setTeamA] = useState<string>("");
-  const [teamB, setTeamB] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { score, points } = useSelector((state: RootState) => state.team);
 
   // New state variables for the confirmation modal
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -63,8 +66,6 @@ export default function Page() {
             }
 
             setMatch(matchData as Match);
-            setTeamA(matchData.teamA);
-            setTeamB(matchData.teamB);
           } else {
             console.error("No such document!");
           }
@@ -82,95 +83,62 @@ export default function Page() {
   }, [matchId]);
 
   const handleScoreChange = async (team: "teamA" | "teamB", delta: number) => {
-    if (!match || !match.scores || match.currentRound === undefined) return;
-
-    const currentRound = match.currentRound;
-    const newScores = [...match.scores];
-
-    if (team === "teamA") {
-      newScores[currentRound].teamA = Math.max(
-        0,
-        newScores[currentRound].teamA + delta
-      );
-    } else {
-      newScores[currentRound].teamB = Math.max(
-        0,
-        newScores[currentRound].teamB + delta
-      );
-    }
-
-    const updatedMatch = {
-      ...match,
-      scores: newScores,
+    const newScore = {
+      teamA: team === "teamA" ? score.teamA + delta : score.teamA,
+      teamB: team === "teamB" ? score.teamB + delta : score.teamB,
     };
 
-    setMatch(updatedMatch);
+    dispatch(updateScore({ team, delta }));
 
     // Update Firestore
     if (matchId) {
       const matchRef = doc(db, "matches", matchId);
-      await updateDoc(matchRef, updatedMatch);
+      await updateDoc(matchRef, {
+        scores: newScore,
+      });
     }
   };
 
-  // ... (Previous code)
-
   const handleWinner = async (team: "teamA" | "teamB") => {
-    if (!match) return;
-
-    const otherTeam = team === "teamA" ? "teamB" : "teamA";
-
-    const updatedMatch = {
-      ...match,
-      winner: team,
-      active: false, // Set active to false
-      points: {
-        ...match.points,
-        [team]: 2,
-        [otherTeam]: 1,
-      },
-    };
-
-    setMatch(updatedMatch);
+    dispatch(setWinner(team));
 
     if (matchId) {
       const matchRef = doc(db, "matches", matchId);
       await updateDoc(matchRef, {
         winner: team,
         active: false, // Update active to false
-        points: updatedMatch.points,
+        points: {
+          teamA: points.teamA,
+          teamB: points.teamB,
+        },
       });
     }
+
+    // Clear local storage
+    localStorage.removeItem("courtNumber");
+    localStorage.removeItem("filteredMatches");
 
     router.push("/umpire");
   };
 
   const handleForfeit = async (team: "teamA" | "teamB") => {
-    if (!match) return;
-
-    const otherTeam = team === "teamA" ? "teamB" : "teamA";
-
-    const updatedMatch = {
-      ...match,
-      forfeit: team,
-      active: false, // Set active to false
-      points: {
-        ...match.points,
-        [team]: 0,
-        [otherTeam]: 2,
-      },
-    };
-
-    setMatch(updatedMatch);
+    dispatch(setForfeit(team));
 
     if (matchId) {
       const matchRef = doc(db, "matches", matchId);
       await updateDoc(matchRef, {
         forfeit: team,
         active: false, // Update active to false
-        points: updatedMatch.points,
+        points: {
+          teamA: points.teamA,
+          teamB: points.teamB,
+        },
       });
     }
+
+    // Clear local storage
+    localStorage.removeItem("courtNumber");
+    localStorage.removeItem("filteredMatches");
 
     router.push("/umpire");
   };
@@ -186,7 +154,7 @@ export default function Page() {
     return <Loading />;
   }
 
-  if (!match || !match.scores || match.currentRound === undefined) {
+  if (!match) {
     return <div>Error: Match data is not available.</div>;
   }
 
@@ -210,7 +178,7 @@ export default function Page() {
           className="w-12 flex items-center justify-center bg-green-500 hover:bg-green-600 active:bg-green-700 text-white"
           onClick={() =>
             confirmActionWithMessage(
-              `Are you sure you want to declare ${teamA} as the winner?`,
+              `Are you sure you want to declare ${match.teamA} as the winner?`,
               () => handleWinner("teamA")
             )
           }
@@ -219,7 +187,7 @@ export default function Page() {
         </button>
 
         <div className="flex-1 flex flex-col justify-center items-center bg-red-500">
-          <h2 className="text-white text-2xl">{teamA}</h2>
+          <h2 className="text-white text-2xl">{match.teamA}</h2>
           <div className="flex items-center space-x-4 mt-5">
             <button
               className="bg-white text-black p-4 rounded-full hover:bg-gray-200 active:bg-gray-300"
@@ -227,9 +195,7 @@ export default function Page() {
             >
               <IconPlus size={24} />
             </button>
-            <h1 className="text-4xl text-white">
-              {match.scores[match.currentRound]?.teamA || 0}
-            </h1>
+            <h1 className="text-4xl text-white">{score.teamA}</h1>
             <button
               className="bg-white text-black p-4 rounded-full hover:bg-gray-200 active:bg-gray-300"
               onClick={() => handleScoreChange("teamA", -1)}
@@ -244,7 +210,7 @@ export default function Page() {
           className="w-12 flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white"
           onClick={() =>
             confirmActionWithMessage(
-              `Are you sure ${teamA} wants to forfeit?`,
+              `Are you sure ${match.teamA} wants to forfeit?`,
               () => handleForfeit("teamA")
             )
           }
@@ -257,9 +223,7 @@ export default function Page() {
 
       {/* Round Info */}
       <div className="text-black font-bold text-center p-2 bg-gray-300">
-        <h1>
-          Match Type: {match.matchType} | Round {match.currentRound + 1}
-        </h1>
+        <h1>Match Type: {match.matchType}</h1>
       </div>
 
       {/* Team B Section */}
@@ -269,7 +233,7 @@ export default function Page() {
           className="w-12 flex items-center justify-center bg-green-500 hover:bg-green-600 active:bg-green-700 text-white"
           onClick={() =>
             confirmActionWithMessage(
-              `Are you sure you want to declare ${teamB} as the winner?`,
+              `Are you sure you want to declare ${match.teamB} as the winner?`,
               () => handleWinner("teamB")
             )
           }
@@ -278,7 +242,7 @@ export default function Page() {
         </button>
 
         <div className="flex-1 flex flex-col justify-center items-center bg-blue-500">
-          <h2 className="text-white text-2xl">{teamB}</h2>
+          <h2 className="text-white text-2xl">{match.teamB}</h2>
           <div className="flex items-center space-x-4 mt-5">
             <button
               className="bg-white text-black p-4 rounded-full hover:bg-gray-200 active:bg-gray-300"
@@ -286,9 +250,7 @@ export default function Page() {
             >
               <IconPlus size={24} />
             </button>
-            <h1 className="text-4xl text-white">
-              {match.scores[match.currentRound]?.teamB || 0}
-            </h1>
+            <h1 className="text-4xl text-white">{score.teamB}</h1>
             <button
               className="bg-white text-black p-4 rounded-full hover:bg-gray-200 active:bg-gray-300"
               onClick={() => handleScoreChange("teamB", -1)}
@@ -303,7 +265,7 @@ export default function Page() {
           className="w-12 flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white"
           onClick={() =>
             confirmActionWithMessage(
-              `Are you sure ${teamB} wants to forfeit?`,
+              `Are you sure ${match.teamB} wants to forfeit?`,
               () => handleForfeit("teamB")
             )
           }

@@ -1,37 +1,35 @@
+// components/ui/TeamDisplay.tsx
 "use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { teams } from "@/lib/data";
 import { motion, AnimatePresence } from "framer-motion";
 import BallCanvas from "./BallCanvas";
 import { useDrag } from "@use-gesture/react";
-import { useDispatch } from "react-redux";
-import { setTeamA, setTeamB } from "@/lib/feature/teamSlice";
 
 interface TeamDisplayProps {
   initialTeamIndex: number;
   teamType: "A" | "B";
+  onTeamChange: (teamName: string, group: string, subTeamName: string) => void;
 }
 
 const TeamDisplay: React.FC<TeamDisplayProps> = ({
   initialTeamIndex,
-  teamType,
+  onTeamChange,
 }) => {
   const [teamIndex, setTeamIndex] = useState(initialTeamIndex);
   const [selectedSubTeam, setSelectedSubTeam] = useState(
-    teams[teamIndex].teams[0]?.teamName || ""
+    teams[initialTeamIndex].teams[0]?.teamName || ""
   );
 
-  const dispatch = useDispatch();
-
   useEffect(() => {
-    const teamName = teams[teamIndex].name;
-    if (teamType === "A") {
-      dispatch(setTeamA({ team: teamName, group: selectedSubTeam }));
-    } else {
-      dispatch(setTeamB({ team: teamName, group: selectedSubTeam }));
-    }
-  }, [teamIndex, selectedSubTeam, teamType, dispatch]);
+    const team = teams[teamIndex];
+    const teamName = team.name;
+    const group =
+      team.teams.find((t) => t.teamName === selectedSubTeam)?.Group || "";
+    onTeamChange(teamName, group, selectedSubTeam);
+  }, [teamIndex, selectedSubTeam, onTeamChange]);
 
   const handlePrev = () => {
     const newIndex = teamIndex === 0 ? teams.length - 1 : teamIndex - 1;
@@ -51,17 +49,17 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({
     setSelectedSubTeam(event.target.value);
   };
 
-  // Create a ref for the div
   const divRef = useRef<HTMLDivElement>(null);
 
-  // Use useDrag and specify the target as the divRef
   useDrag(
-    ({ swipe: [swipeX] }) => {
+    ({ swipe }) => {
+      const swipeX = swipe[0];
       if (swipeX === -1) handleNext();
       if (swipeX === 1) handlePrev();
     },
     {
       target: divRef,
+      eventOptions: { passive: false },
     }
   );
 
