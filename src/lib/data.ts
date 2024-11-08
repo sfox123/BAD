@@ -19,6 +19,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "WFP-1",
+        Group: "B",
         malePlayers: [
           { FullName: "Abesh POUDEL" },
           { FullName: "Shehan FERNANDO" },
@@ -35,6 +36,7 @@ export const teams: Team[] = [
       },
       {
         teamName: "WFP-2",
+        Group: "A",
         malePlayers: [
           { FullName: "Oshantha MERENCHIGE" },
           { FullName: "Mohideen NUSRY" },
@@ -60,6 +62,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "UNOPS-1",
+        Group: "A",
         malePlayers: [
           { FullName: "Richerd Amos Rajaratnam" },
           { FullName: "Edirisinghe Mudiyanselage Sithmi Nimashi Edirisinghe" },
@@ -96,6 +99,7 @@ export const teams: Team[] = [
       },
       {
         teamName: "UNOPS-2",
+        Group: "B",
         malePlayers: [
           { FullName: "Richerd Amos Rajaratnam" },
           { FullName: "Edirisinghe Mudiyanselage Sithmi Nimashi Edirisinghe" },
@@ -138,6 +142,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "Team 1",
+        Group: "B",
         malePlayers: [
           { FullName: "Sanjeewa Warusawitharana" },
           { FullName: "Abner Daniel" },
@@ -163,6 +168,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "UNDP-1",
+        Group: "A",
         malePlayers: [
           { FullName: "Yasas Thalagala" },
           { FullName: "Rasu Xavier" },
@@ -179,6 +185,7 @@ export const teams: Team[] = [
       },
       {
         teamName: "UNDP-2",
+        Group: "B",
         malePlayers: [
           { FullName: "Lakmaal Rodrigo" },
           { FullName: "Heshoban Thavakumaran" },
@@ -201,6 +208,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "Team 1",
+        Group: "A",
         malePlayers: [
           { FullName: "Benjamin Sinathurai" },
           { FullName: "Ratan Khisha" },
@@ -226,6 +234,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "IOM-1",
+        Group: "B",
         malePlayers: [
           { FullName: "Aruna Dishantha" },
           { FullName: "Antontte Amritha Muttiah" },
@@ -242,6 +251,7 @@ export const teams: Team[] = [
       },
       {
         teamName: "IOM-2",
+        Group: "A",
         malePlayers: [
           { FullName: "Rajitha Goonerathne" },
           { FullName: "Tharindu Jayawardhane" },
@@ -265,6 +275,7 @@ export const teams: Team[] = [
     teams: [
       {
         teamName: "Team 1",
+        Group: "A",
         malePlayers: [
           { FullName: "Andrea Karoat" },
           { FullName: "David Blackman" },

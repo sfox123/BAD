@@ -11,6 +11,7 @@ export interface Player {
 
 export interface TeamDetail {
   teamName: string;
+  Group: string;
   malePlayers: Player[];
   femalePlayers: Player[];
 }

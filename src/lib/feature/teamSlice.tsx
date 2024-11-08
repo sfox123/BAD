@@ -26,7 +26,7 @@ const initialState: TeamState = {
   teamAPlayers: [],
   teamBPlayers: [],
   selectedUmpire: "",
-  active: true,
+  active: false,
 };
 
 const teamSlice = createSlice({

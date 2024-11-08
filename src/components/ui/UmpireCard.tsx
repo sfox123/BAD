@@ -5,16 +5,38 @@ import Image from "next/image";
 import { IconArrowsDiff } from "@tabler/icons-react";
 import { teams } from "@/lib/data";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { setActive } from "@/lib/feature/teamSlice";
+// Import Firebase functions
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig"; // Adjust the import path as needed
 
 interface Match {
   id: string;
   teamA: string;
   teamB: string;
   matchType: string;
-  // Add other properties if needed
 }
 
 const UmpireCard = ({ match }: { match: Match }) => {
+  const dispatch = useDispatch();
+
+  const handleStart = async () => {
+    // Reference to the match document in Firestore
+    const matchRef = doc(db, "matches", match.id);
+
+    try {
+      // Update the 'active' field to true in Firestore
+      await updateDoc(matchRef, { active: true });
+      console.log("Match status updated to active in Firestore");
+
+      // Optionally dispatch to Redux after successful update
+      dispatch(setActive(true));
+    } catch (error) {
+      console.error("Error updating match status:", error);
+    }
+  };
+
   const teamALogo = teams.find((team) => team.name === match.teamA)?.logo || "";
   const teamBLogo = teams.find((team) => team.name === match.teamB)?.logo || "";
 
@@ -25,16 +47,16 @@ const UmpireCard = ({ match }: { match: Match }) => {
           <Image
             src={teamALogo}
             alt={match.teamA}
-            height="50"
-            width="50"
+            height={50}
+            width={50}
             className="object-contain"
           />
           <IconArrowsDiff size={24} stroke={1.5} />
           <Image
             src={teamBLogo}
             alt={match.teamB}
-            height="50"
-            width="50"
+            height={50}
+            width={50}
             className="object-contain"
           />
         </div>
@@ -46,9 +68,10 @@ const UmpireCard = ({ match }: { match: Match }) => {
         </p>
         <Link
           href={`score/${match.id}`}
+          onClick={handleStart}
           className="rounded-full pl-4 pr-1 py-1 text-white flex items-center space-x-1 bg-black mt-4 text-xs font-bold dark:bg-zinc-800"
         >
-          <span>Start </span>
+          <span>Start</span>
           <span className="bg-green-700 rounded-full text-[0.6rem] px-2 py-0 text-white">
             Now
           </span>

@@ -113,16 +113,17 @@ export default function Page() {
     }
   };
 
+  // ... (Previous code)
+
   const handleWinner = async (team: "teamA" | "teamB") => {
     if (!match) return;
 
-    // Determine the other team
     const otherTeam = team === "teamA" ? "teamB" : "teamA";
 
-    // Assign points
     const updatedMatch = {
       ...match,
       winner: team,
+      active: false, // Set active to false
       points: {
         ...match.points,
         [team]: 2,
@@ -130,30 +131,29 @@ export default function Page() {
       },
     };
 
-    // Update state
     setMatch(updatedMatch);
 
-    // Update Firestore
     if (matchId) {
       const matchRef = doc(db, "matches", matchId);
       await updateDoc(matchRef, {
         winner: team,
+        active: false, // Update active to false
         points: updatedMatch.points,
       });
     }
+
     router.push("/umpire");
   };
 
   const handleForfeit = async (team: "teamA" | "teamB") => {
     if (!match) return;
 
-    // Determine the other team
     const otherTeam = team === "teamA" ? "teamB" : "teamA";
 
-    // Assign points
     const updatedMatch = {
       ...match,
       forfeit: team,
+      active: false, // Set active to false
       points: {
         ...match.points,
         [team]: 0,
@@ -161,19 +161,20 @@ export default function Page() {
       },
     };
 
-    // Update state
     setMatch(updatedMatch);
 
-    // Update Firestore
     if (matchId) {
       const matchRef = doc(db, "matches", matchId);
       await updateDoc(matchRef, {
         forfeit: team,
+        active: false, // Update active to false
         points: updatedMatch.points,
       });
     }
+
     router.push("/umpire");
   };
+
   // Function to open the confirmation modal
   const confirmActionWithMessage = (message: string, action: () => void) => {
     setModalMessage(message);
