@@ -3,6 +3,7 @@ import { Team, Match, Umpire } from "../app/types";
 
 import umpire from "@/img/umpire.jpg";
 import ops from "@/img/ops.jpg";
+import points from "@/img/singles.png";
 
 import wfp from "@/img/wfp.png";
 import unops from "@/img/unops.png";
@@ -141,7 +142,7 @@ export const teams: Team[] = [
     logo: `${unicef.src}`,
     teams: [
       {
-        teamName: "Team 1",
+        teamName: "WHO UNICEF",
         Group: "B",
         malePlayers: [
           { FullName: "Sanjeewa Warusawitharana" },
@@ -207,7 +208,7 @@ export const teams: Team[] = [
     logo: `${unfpa.src}`,
     teams: [
       {
-        teamName: "Team 1",
+        teamName: "UNFPA",
         Group: "A",
         malePlayers: [
           { FullName: "Benjamin Sinathurai" },
@@ -274,7 +275,7 @@ export const teams: Team[] = [
     logo: `${un.src}`,
     teams: [
       {
-        teamName: "Team 1",
+        teamName: "RCO FAO DSS",
         Group: "A",
         malePlayers: [
           { FullName: "Andrea Karoat" },
@@ -340,6 +341,12 @@ export const buttonData = [
     before: "https://i.ibb.co/zSDZwnB/crowd.jpg",
     after:
       "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExOG5qYmRnYW5seGxuaWd6eWk0NDJ5cWNzNTNvZ2dwempocTlxeTE1bCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26FxCOdhlvEQXbeH6/giphy.gif",
+  },
+  {
+    name: "POINTS",
+    icon: IconSettings,
+    before: `${points.src}`,
+    after: `${points.src}`,
   },
 ];
 

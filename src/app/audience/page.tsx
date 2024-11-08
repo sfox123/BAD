@@ -1,15 +1,24 @@
+// Page.tsx
 "use client";
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
 import { teams } from "@/lib/data";
-import { MatchLive, Score } from "@/app/types";
+import { MatchLive } from "@/app/types";
+import PointsTable from "../points/page";
+
+// Mapping of Match Type abbreviations to full names
+const matchTypeMap: { [key: string]: string } = {
+  MS: "Men Singles",
+  WS: "Women Singles",
+  MD: "Men Doubles",
+  WD: "Women Doubles",
+  XD: "Mixed Doubles",
+};
 
 export default function Page() {
   const [matches, setMatches] = useState<MatchLive[]>([]);
-  const ref = useRef<HTMLDivElement>(null);
   const id = useId();
 
   const fetchData = async () => {
@@ -36,75 +45,82 @@ export default function Page() {
     return team ? team.logo : "";
   };
 
+  // Function to extract court number from 'selectedUmpire' (e.g., "Court 2" => 2)
+  const getCourtNumber = (selectedUmpire: string): number | null => {
+    const match = selectedUmpire.match(/\d+/);
+    return match ? parseInt(match[0], 10) : null;
+  };
+
   return (
-    <div>
+    <div className="p-4">
+      <h1 className="text-3xl font-bold mb-6">Live Matches</h1>
       {matches.length > 0 ? (
-        <AnimatePresence>
-          <div className="fixed inset-0 grid grid-cols-2 grid-rows-2 gap-4 p-4 z-[100]">
-            {matches.map((match) => (
-              <motion.div
-                key={`card-${match.teamA}-${match.teamB}-${id}`}
-                layoutId={`card-${match.teamA}-${match.teamB}-${id}`}
-                ref={ref}
-                className="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-neutral-900 overflow-hidden"
-              >
-                <div className="p-8 flex flex-col items-center space-y-8 md:space-y-12 lg:space-y-16">
-                  <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-neutral-200">
-                    Live
-                  </h2>
-                  <div className="flex justify-center items-center space-x-4 md:space-x-8 lg:space-x-12">
-                    <div className="flex flex-col items-center">
-                      <Image
-                        src={getTeamLogo(match.teamA)}
-                        alt={`${match.teamA} logo`}
-                        width={100}
-                        height={100}
-                        className="md:w-36 md:h-36 lg:w-48 lg:h-48"
-                      />
-                      <span className="text-xl md:text-2xl lg:text-3xl font-bold text-neutral-700 dark:text-neutral-200 mt-2 md:mt-4">
-                        {match.teamA}
-                      </span>
-                    </div>
-                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-neutral-200">
-                      {match.scores[match.currentRound]?.teamA ?? 0}
-                    </span>
-                    <span className="text-xl md:text-3xl lg:text-4xl font-bold text-neutral-700 dark:text-neutral-200 mx-2 md:mx-4">
-                      VS
-                    </span>
-                    <span className="text-2xl md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-neutral-200">
-                      {match.scores[match.currentRound]?.teamB ?? 0}
-                    </span>
-                    <div className="flex flex-col items-center">
-                      <Image
-                        src={getTeamLogo(match.teamB)}
-                        alt={`${match.teamB} logo`}
-                        width={100}
-                        height={100}
-                        className="md:w-36 md:h-36 lg:w-48 lg:h-48"
-                      />
-                      <span className="text-xl md:text-2xl lg:text-3xl font-bold text-neutral-700 dark:text-neutral-200 mt-2 md:mt-4">
-                        {match.teamB}
-                      </span>
-                    </div>
-                  </div>
-                  <h4 className="text-xl md:text-3xl lg:text-4xl font-bold text-neutral-700 dark:text-neutral-200">
-                    SCORES
-                  </h4>
-                  <div className="text-neutral-600 text-lg md:text-xl lg:text-2xl dark:text-neutral-400 flex flex-wrap justify-center gap-4 md:gap-8">
-                    {match.scores.map((score: Score, roundIndex: number) => (
-                      <p className="mt-2 md:mt-4" key={roundIndex}>
-                        Round {roundIndex + 1}: {score.teamA} - {score.teamB}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </AnimatePresence>
+        <table className="min-w-full bg-white dark:bg-neutral-900 border border-gray-200 mb-8">
+          <thead>
+            <tr>
+              <th className="py-2 px-4 border-b">Court</th>
+              <th className="py-2 px-4 border-b">Match Type</th>
+              <th className="py-2 px-4 border-b">Team</th>
+              <th className="py-2 px-4 border-b">Score</th>
+              <th className="py-2 px-4 border-b"></th>
+              <th className="py-2 px-4 border-b">Score</th>
+              <th className="py-2 px-4 border-b">Team</th>
+            </tr>
+          </thead>
+          <tbody>
+            {matches.map((match) => {
+              const courtNumber = getCourtNumber(match.selectedUmpire);
+              // Get full match type name from the mapping
+              const fullMatchType =
+                matchTypeMap[match.matchType] || match.matchType;
+
+              return (
+                <tr
+                  key={`match-${match.teamA}-${match.teamB}-${id}`}
+                  className="text-center"
+                >
+                  <td className="py-2 px-4 border-b">
+                    {courtNumber !== null ? courtNumber : "N/A"}
+                  </td>
+                  <td className="py-2 px-4 border-b">{fullMatchType}</td>
+                  <td className="py-2 px-4 border-b flex items-center justify-center space-x-2">
+                    <Image
+                      src={getTeamLogo(match.teamA)}
+                      alt={`${match.teamA} logo`}
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                    <span>{match.teamA}</span>
+                  </td>
+                  <td className="py-2 px-4 border-b">
+                    {match.scores[match.currentRound]?.teamA ?? 0}
+                  </td>
+                  <td className="py-2 px-4 border-b">VS</td>
+                  <td className="py-2 px-4 border-b">
+                    {match.scores[match.currentRound]?.teamB ?? 0}
+                  </td>
+                  <td className="py-2 px-4 border-b flex items-center justify-center space-x-2">
+                    <Image
+                      src={getTeamLogo(match.teamB)}
+                      alt={`${match.teamB} logo`}
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                    <span>{match.teamB}</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       ) : (
-        <div>No active matches found</div>
+        <div className="text-center text-gray-500">No active matches found</div>
       )}
+
+      {/* Points Table */}
+      <PointsTable />
     </div>
   );
 }
