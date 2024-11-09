@@ -8,7 +8,12 @@ import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
-import { updateScore, setWinner, setForfeit } from "@/lib/feature/teamSlice";
+import {
+  updateScore,
+  setWinner,
+  setForfeit,
+  resetScore,
+} from "@/lib/feature/teamSlice";
 
 export default function Page() {
   interface Match {
@@ -66,6 +71,7 @@ export default function Page() {
             }
 
             setMatch(matchData as Match);
+            dispatch(resetScore());
           } else {
             console.error("No such document!");
           }

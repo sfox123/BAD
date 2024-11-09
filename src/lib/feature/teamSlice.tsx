@@ -99,6 +99,9 @@ const teamSlice = createSlice({
       state.points[forfeit] = 0;
       state.points[otherTeam] = 2;
     },
+    resetScore(state) {
+      state.score = { teamA: 0, teamB: 0 };
+    },
   },
 });
 
@@ -115,6 +118,7 @@ export const {
   updateScore,
   setWinner,
   setForfeit,
+  resetScore,
 } = teamSlice.actions;
 
 export default teamSlice.reducer;

@@ -1,11 +1,10 @@
-// PointsTable.tsx
 "use client";
 import React, { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
 import { teams } from "@/lib/data";
 
 interface Match {
+  id: string;
+  matchType: string;
   active: boolean;
   teamA: string;
   teamB: string;
@@ -30,156 +29,145 @@ interface TeamPoints {
   };
 }
 
-export default function PointsTable() {
+// Accept matches as a prop
+export default function PointsTable({ matches }: { matches: Match[] }) {
   const [groupAPoints, setGroupAPoints] = useState<TeamPoints>({});
   const [groupBPoints, setGroupBPoints] = useState<TeamPoints>({});
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "matches"));
-        const groupAPointsAccumulator: TeamPoints = {};
-        const groupBPointsAccumulator: TeamPoints = {};
+    if (!matches || matches.length === 0) return;
 
-        querySnapshot.forEach((doc) => {
-          const data = doc.data() as Match;
+    const groupAPointsAccumulator: TeamPoints = {};
+    const groupBPointsAccumulator: TeamPoints = {};
 
-          // Exclude live matches and matches without a winner or forfeit
-          if (data.active || (!data.winner && !data.forfeit)) {
-            return;
-          }
-
-          // Determine the group for teamA and teamB
-          const teamAGroup = teams
-            .flatMap((team) => team.teams)
-            .find((subTeam) => subTeam.teamName === data.teamASubTeam)?.Group;
-
-          const teamBGroup = teams
-            .flatMap((team) => team.teams)
-            .find((subTeam) => subTeam.teamName === data.teamBSubTeam)?.Group;
-
-          // Initialize teams in the appropriate accumulator
-          const initializeTeam = (
-            accumulator: TeamPoints,
-            teamName: string
-          ) => {
-            if (!accumulator[teamName]) {
-              accumulator[teamName] = {
-                matchesPlayed: 0,
-                matchesWon: 0,
-                matchesLost: 0,
-                points: 0,
-              };
-            }
-          };
-
-          if (teamAGroup === "A") {
-            initializeTeam(groupAPointsAccumulator, data.teamASubTeam);
-          } else if (teamAGroup === "B") {
-            initializeTeam(groupBPointsAccumulator, data.teamASubTeam);
-          }
-
-          if (teamBGroup === "A") {
-            initializeTeam(groupAPointsAccumulator, data.teamBSubTeam);
-          } else if (teamBGroup === "B") {
-            initializeTeam(groupBPointsAccumulator, data.teamBSubTeam);
-          }
-
-          // Update matches played
-          const updateMatchesPlayed = (
-            accumulator: TeamPoints,
-            teamName: string
-          ) => {
-            accumulator[teamName].matchesPlayed += 1;
-          };
-
-          if (teamAGroup === "A") {
-            updateMatchesPlayed(groupAPointsAccumulator, data.teamASubTeam);
-          } else if (teamAGroup === "B") {
-            updateMatchesPlayed(groupBPointsAccumulator, data.teamASubTeam);
-          }
-
-          if (teamBGroup === "A") {
-            updateMatchesPlayed(groupAPointsAccumulator, data.teamBSubTeam);
-          } else if (teamBGroup === "B") {
-            updateMatchesPlayed(groupBPointsAccumulator, data.teamBSubTeam);
-          }
-
-          // Update match outcomes
-          if (data.winner) {
-            if (data.winner === "teamA") {
-              // Update Group A/B for teamA
-              if (teamAGroup === "A") {
-                groupAPointsAccumulator[data.teamASubTeam].matchesWon += 1;
-                groupAPointsAccumulator[data.teamASubTeam].points += 2; // Assuming 2 points for a win
-              } else if (teamAGroup === "B") {
-                groupBPointsAccumulator[data.teamASubTeam].matchesWon += 1;
-                groupBPointsAccumulator[data.teamASubTeam].points += 2;
-              }
-
-              // Update Group A/B for teamB (loss)
-              if (teamBGroup === "A") {
-                groupAPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
-                groupAPointsAccumulator[data.teamBSubTeam].points += 1; // Assuming 1 point for a loss
-              } else if (teamBGroup === "B") {
-                groupBPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
-                groupBPointsAccumulator[data.teamBSubTeam].points += 1;
-              }
-            } else if (data.winner === "teamB") {
-              // Update Group A/B for teamB
-              if (teamBGroup === "A") {
-                groupAPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
-                groupAPointsAccumulator[data.teamBSubTeam].points += 2;
-              } else if (teamBGroup === "B") {
-                groupBPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
-                groupBPointsAccumulator[data.teamBSubTeam].points += 2;
-              }
-
-              // Update Group A/B for teamA (loss)
-              if (teamAGroup === "A") {
-                groupAPointsAccumulator[data.teamASubTeam].matchesLost += 1;
-                groupAPointsAccumulator[data.teamASubTeam].points += 1;
-              } else if (teamAGroup === "B") {
-                groupBPointsAccumulator[data.teamASubTeam].matchesLost += 1;
-                groupBPointsAccumulator[data.teamASubTeam].points += 1;
-              }
-            }
-          } else if (data.forfeit) {
-            if (data.forfeit === "teamA") {
-              // Team A forfeited, Team B wins
-              if (teamBGroup === "A") {
-                groupAPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
-                groupAPointsAccumulator[data.teamBSubTeam].points += 2; // Assuming 2 points for a win
-                groupAPointsAccumulator[data.teamASubTeam].matchesLost += 1;
-              } else if (teamBGroup === "B") {
-                groupBPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
-                groupBPointsAccumulator[data.teamBSubTeam].points += 2;
-                groupBPointsAccumulator[data.teamASubTeam].matchesLost += 1;
-              }
-            } else if (data.forfeit === "teamB") {
-              // Team B forfeited, Team A wins
-              if (teamAGroup === "A") {
-                groupAPointsAccumulator[data.teamASubTeam].matchesWon += 1;
-                groupAPointsAccumulator[data.teamASubTeam].points += 2;
-                groupAPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
-              } else if (teamAGroup === "B") {
-                groupBPointsAccumulator[data.teamASubTeam].matchesWon += 1;
-                groupBPointsAccumulator[data.teamASubTeam].points += 2;
-                groupBPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
-              }
-            }
-          }
-        });
-
-        setGroupAPoints(groupAPointsAccumulator);
-        setGroupBPoints(groupBPointsAccumulator);
-      } catch (error) {
-        console.error("Error fetching matches:", error);
+    matches.forEach((data) => {
+      // Exclude live matches and matches without a winner or forfeit
+      if (data.active || (!data.winner && !data.forfeit)) {
+        return;
       }
-    };
 
-    fetchMatches();
-  }, []);
+      // Determine the group for teamA and teamB
+      const teamAGroup = teams
+        .flatMap((team) => team.teams)
+        .find((subTeam) => subTeam.teamName === data.teamASubTeam)?.Group;
+
+      const teamBGroup = teams
+        .flatMap((team) => team.teams)
+        .find((subTeam) => subTeam.teamName === data.teamBSubTeam)?.Group;
+
+      // Initialize teams in the appropriate accumulator
+      const initializeTeam = (accumulator: TeamPoints, teamName: string) => {
+        if (!accumulator[teamName]) {
+          accumulator[teamName] = {
+            matchesPlayed: 0,
+            matchesWon: 0,
+            matchesLost: 0,
+            points: 0,
+          };
+        }
+      };
+
+      if (teamAGroup === "A") {
+        initializeTeam(groupAPointsAccumulator, data.teamASubTeam);
+      } else if (teamAGroup === "B") {
+        initializeTeam(groupBPointsAccumulator, data.teamASubTeam);
+      }
+
+      if (teamBGroup === "A") {
+        initializeTeam(groupAPointsAccumulator, data.teamBSubTeam);
+      } else if (teamBGroup === "B") {
+        initializeTeam(groupBPointsAccumulator, data.teamBSubTeam);
+      }
+
+      // Update matches played
+      const updateMatchesPlayed = (
+        accumulator: TeamPoints,
+        teamName: string
+      ) => {
+        accumulator[teamName].matchesPlayed += 1;
+      };
+
+      if (teamAGroup === "A") {
+        updateMatchesPlayed(groupAPointsAccumulator, data.teamASubTeam);
+      } else if (teamAGroup === "B") {
+        updateMatchesPlayed(groupBPointsAccumulator, data.teamASubTeam);
+      }
+
+      if (teamBGroup === "A") {
+        updateMatchesPlayed(groupAPointsAccumulator, data.teamBSubTeam);
+      } else if (teamBGroup === "B") {
+        updateMatchesPlayed(groupBPointsAccumulator, data.teamBSubTeam);
+      }
+
+      // Update match outcomes
+      if (data.winner) {
+        if (data.winner === "teamA") {
+          // Update Group A/B for teamA
+          if (teamAGroup === "A") {
+            groupAPointsAccumulator[data.teamASubTeam].matchesWon += 1;
+            groupAPointsAccumulator[data.teamASubTeam].points += 2; // Assuming 2 points for a win
+          } else if (teamAGroup === "B") {
+            groupBPointsAccumulator[data.teamASubTeam].matchesWon += 1;
+            groupBPointsAccumulator[data.teamASubTeam].points += 2;
+          }
+
+          // Update Group A/B for teamB (loss)
+          if (teamBGroup === "A") {
+            groupAPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
+            groupAPointsAccumulator[data.teamBSubTeam].points += 1; // Assuming 1 point for a loss
+          } else if (teamBGroup === "B") {
+            groupBPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
+            groupBPointsAccumulator[data.teamBSubTeam].points += 1;
+          }
+        } else if (data.winner === "teamB") {
+          // Update Group A/B for teamB
+          if (teamBGroup === "A") {
+            groupAPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
+            groupAPointsAccumulator[data.teamBSubTeam].points += 2;
+          } else if (teamBGroup === "B") {
+            groupBPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
+            groupBPointsAccumulator[data.teamBSubTeam].points += 2;
+          }
+
+          // Update Group A/B for teamA (loss)
+          if (teamAGroup === "A") {
+            groupAPointsAccumulator[data.teamASubTeam].matchesLost += 1;
+            groupAPointsAccumulator[data.teamASubTeam].points += 1;
+          } else if (teamAGroup === "B") {
+            groupBPointsAccumulator[data.teamASubTeam].matchesLost += 1;
+            groupBPointsAccumulator[data.teamASubTeam].points += 1;
+          }
+        }
+      } else if (data.forfeit) {
+        if (data.forfeit === "teamA") {
+          // Team A forfeited, Team B wins
+          if (teamBGroup === "A") {
+            groupAPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
+            groupAPointsAccumulator[data.teamBSubTeam].points += 2; // Assuming 2 points for a win
+            groupAPointsAccumulator[data.teamASubTeam].matchesLost += 1;
+          } else if (teamBGroup === "B") {
+            groupBPointsAccumulator[data.teamBSubTeam].matchesWon += 1;
+            groupBPointsAccumulator[data.teamBSubTeam].points += 2;
+            groupBPointsAccumulator[data.teamASubTeam].matchesLost += 1;
+          }
+        } else if (data.forfeit === "teamB") {
+          // Team B forfeited, Team A wins
+          if (teamAGroup === "A") {
+            groupAPointsAccumulator[data.teamASubTeam].matchesWon += 1;
+            groupAPointsAccumulator[data.teamASubTeam].points += 2;
+            groupAPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
+          } else if (teamAGroup === "B") {
+            groupBPointsAccumulator[data.teamASubTeam].matchesWon += 1;
+            groupBPointsAccumulator[data.teamASubTeam].points += 2;
+            groupBPointsAccumulator[data.teamBSubTeam].matchesLost += 1;
+          }
+        }
+      }
+    });
+
+    setGroupAPoints(groupAPointsAccumulator);
+    setGroupBPoints(groupBPointsAccumulator);
+  }, [matches]);
 
   // Sort teams by points
   const sortedGroupATeams = Object.entries(groupAPoints).sort(
