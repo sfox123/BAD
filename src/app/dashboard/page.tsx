@@ -16,10 +16,6 @@ const matchTypeMap: { [key: string]: string } = {
 };
 
 export default function Page() {
-  interface Player {
-    FullName: string;
-  }
-
   interface Score {
     teamA: number;
     teamB: number;
